@@ -11,5 +11,12 @@ client.once('ready', () => {
 	console.log('Ready!');
 });
 
+client.on('message', message =>{
+	if(message.content === '!ping')
+	{
+		message.channel.send('Pong');
+	}
+});
+
 //discord bots token for login.
 client.login(process.env.TOKEN);
