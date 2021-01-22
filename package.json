@@ -1,0 +1,12 @@
+{
+  "name": "discord-bot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/AshokSasi/kryus-bot.git",
+  "author": "Ashok Sasitharan",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^12.5.1",
+    "dotenv": "^8.2.0"
+  }
+}
