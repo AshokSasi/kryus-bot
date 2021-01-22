@@ -1,5 +1,6 @@
 const dotenv = require("dotenv");
 dotenv.config();
+const fs = require('fs');
 // require the discord.js module
 const Discord = require('discord.js');
 //require the prefix
@@ -7,6 +8,17 @@ const { prefix} = require('./config.json');
 //create a new Discord client
 const client = new Discord.Client();
 
+client.commands = new Discord.Collection();
+//return an array of all the file names in the commands directory
+const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+
+for (const file of commandFiles) {
+	const command = require(`./commands/${file}`);
+
+	// set a new item in the Collection
+	// with the key as the command name and the value as the exported module
+	client.commands.set(command.name, command);
+}
 // When the client is ready run this code
 // This event will only trigger one time after logging in
 client.once('ready', () => {
@@ -25,59 +37,20 @@ client.on('message', message =>{
 	const args = message.content.slice(prefix.length).trim().split(/ +/);
 
 	//take the first element in array and return it while also removing it from the original args array
-	const command = args.shift().toLowerCase();
+	const commandName = args.shift().toLowerCase();
 
-	if (message.content === `${prefix}ping`) //ping command
+	if (!client.commands.has(commandName)) return;
+
+	const command = client.commands.get(commandName);
+	try
 	{
-		message.channel.send('Pong.');
+		command.execute(message, args);
+
 	}
-	else if (message.content === `${prefix}beep`) //beep command
+	catch (error)
 	{
-		message.channel.send('Boop.');
-	}
-	else if (message.content === `${prefix}server`)//server info command
-	{
-		message.channel.send(`This server's name is:  ${message.guild.name} and there are currently : ${message.guild.memberCount} members in this server.`);
-	}
-	else if (command === 'args-info')
-	{
-		if(!args.length)
-		{
-			return message.channel.send(`You didn't provide any arguments, ${message.author}!`);
-		}
-		else if (args[0] === `foo`)
-		{
-			return message.channel.send(`bar`);
-		}
-		//send a message with the command name and arguments
-		message.channel.send(`Command name: ${command}\nArguments: ${args}`);
-	}
-	else if(command === 'kick')// kick user command
-	{
-		//checks if there is no users tagged in the command and sends error message
-		if(!message.mentions.users.size)
-		{
-			return message.reply(`You need to tag a user in order to kick them!!!`);
-		}
-		else
-		{
-			//grabs the user that was mentioned in the command
-			const taggedUser = message.mentions.users.first();
-			message.channel.send(`You wanted to kick: ${taggedUser.username}`);
-		}
-		
-	}
-	else if (command === 'avatar') //avatar command
-	{
-		if (!message.mentions.users.size)
-		{
-			return message.channel.send(`Your avatar: <${message.author.displayAvatarURL({ format: "png", dynamic: true})}>`);
-		}
-		const avatarList = message.mentions.users.map(user =>{
-			return `${user.username}'s avatar: <${user.displayAvatarURL({ format: "png", dynamic: true})}>`;
-		});
-		// send the entire array of strings as a message
-		message.channel.send(avatarList);
+		console.error(error);
+		message.reply('There was an error trying to execute that command!');
 	}
 });
 
